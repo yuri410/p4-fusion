@@ -6,9 +6,9 @@
  */
 #include "timer.h"
 
-const std::chrono::high_resolution_clock Timer::s_Clock;
+const std::chrono::high_resolution_clock Timer2::s_Clock;
 
-Timer::Timer()
+Timer2::Timer2()
     : m_StartTime(Now())
 {
 }

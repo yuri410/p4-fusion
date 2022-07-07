@@ -33,6 +33,15 @@ void ChangeList::PrepareDownload()
 			    std::unique_lock<std::mutex> lock((*(cl.canDownloadMutex)));
 			    *cl.canDownload = true;
 		    }
+		    PRINT("Prepare download " << cl.number << " files " << cl.changedFiles.size());
+			if (cl.changedFiles.empty())
+			{
+			    ERR("Empty CL " << cl.number);
+			}
+		    for (FileData& fileData : cl.changedFiles)
+		    {
+			    fileData.changelist = cl.number;
+			}
 		    cl.canDownloadCV->notify_all();
 	    });
 }
@@ -56,6 +65,8 @@ void ChangeList::StartDownload(const std::string& depotPath, const int& printBat
 		    {
 			    return;
 		    }
+
+		    PRINT("Start download " << cl.number);
 
 		    std::shared_ptr<std::vector<std::string>> printBatchFiles = std::make_shared<std::vector<std::string>>();
 		    std::shared_ptr<std::vector<FileData*>> printBatchFileData = std::make_shared<std::vector<FileData*>>();
@@ -104,11 +115,17 @@ void ChangeList::Flush(std::shared_ptr<std::vector<std::string>> printBatchFiles
 	// Share ownership of this batch with the thread job
 	ThreadPool::GetSingleton()->AddJob([this, printBatchFiles, printBatchFileData](P4API* p4)
 	    {
+		    for (auto& e : *printBatchFiles)
+		    {
+			    PRINT("Printing " << e);
+		    }
+
 		    const PrintResult& printData = p4->PrintFiles(*printBatchFiles);
 
 		    for (int i = 0; i < printBatchFiles->size(); i++)
 		    {
-			    printBatchFileData->at(i)->contents = std::move(printData.GetPrintData().at(i).contents);
+			    //printBatchFileData->at(i)->contents = std::move(printData.GetPrintData().at(i).contents);
+			    printBatchFileData->at(i)->SetContents(printData.GetPrintData().at(i).contents);
 		    }
 
 		    (*filesDownloaded) += printBatchFiles->size();

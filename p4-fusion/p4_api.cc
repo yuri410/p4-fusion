@@ -243,7 +243,7 @@ ChangesResult P4API::Changes(const std::string& path, const std::string& from, i
 	std::vector<std::string> args = {
 		"-l", // Get full descriptions instead of sending cut-short ones
 		"-s", "submitted", // Only include submitted CLs
-		"-r" // Send CLs in chronological order
+		//"-r" // Send CLs in chronological order
 	};
 
 	// This needs to be declared outside the if scope below to
@@ -270,6 +270,8 @@ ChangesResult P4API::Changes(const std::string& path, const std::string& from, i
 	args.push_back(path + pathAddition);
 
 	ChangesResult result = Run<ChangesResult>("changes", args);
+
+	std::reverse( result.GetChanges().begin(), result.GetChanges().end() );
 
 	return result;
 }

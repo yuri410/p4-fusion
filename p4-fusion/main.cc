@@ -32,7 +32,7 @@ int Main(int argc, char** argv)
 {
 	PRINT("Running p4-fusion from: " << argv[0]);
 
-	Timer programTimer;
+	Timer2 programTimer;
 
 	Arguments::GetSingleton()->RequiredParameter("--path", "P4 depot path to convert to a Git repo");
 	Arguments::GetSingleton()->RequiredParameter("--src", "Relative path where the git repository should be created. This path should be empty before running p4-fusion for the first time in a directory.");
@@ -223,7 +223,7 @@ int Main(int argc, char** argv)
 	SUCCESS("Received userbase details from the Perforce server");
 
 	// Commit procedure start
-	Timer commitTimer;
+	Timer2 commitTimer;
 
 	PRINT("Last CL to start downloading is CL " << changes.at(lastDownloadedCL).number);
 
@@ -245,6 +245,8 @@ int Main(int argc, char** argv)
 
 		ChangeList& cl = changes.at(i);
 
+		PRINT("Waiting for CL " << cl.number);
+
 		// Ensure the files are downloaded before committing them to the repository
 		cl.WaitForDownload();
 
@@ -258,7 +260,7 @@ int Main(int argc, char** argv)
 				}
 				else
 				{
-					git.AddFileToIndex(depotPath, file.depotFile, file.contents, p4.IsExecutable(file.type));
+					git.AddFileToIndex(depotPath, file.depotFile, file.GetContents(), p4.IsExecutable(file.type));
 				}
 
 				// No use for keeping the contents in memory once it has been added
@@ -332,7 +334,7 @@ void SignalHandler(sig_atomic_t s)
 	}
 	called = true;
 
-	ERR("Signal Received: " << strsignal(s));
+	ERR("Signal Received: " << (int)(s));
 
 	ThreadPool::GetSingleton()->ShutDown();
 
